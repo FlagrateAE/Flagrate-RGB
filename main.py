@@ -1,5 +1,6 @@
 from libs.tray import Tray
 from libs.arduino import Arduino
+from libs.color import SpotifyColorExtractor
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -9,6 +10,8 @@ import time
 
 def RUN():
     arduino = Arduino("COM3")
+    
+    SpotifyColorExtractor()
     
     tray = Tray()
     

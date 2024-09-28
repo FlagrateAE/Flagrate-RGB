@@ -1,8 +1,6 @@
 import pystray
 from PIL import Image, ImageDraw
-from random import randint
 from time import sleep
-from os import getcwd
 
 class Tray(pystray.Icon):
     fRunning = False
@@ -14,11 +12,11 @@ class Tray(pystray.Icon):
         if not track:
             return pystray.Menu(
                         pystray.MenuItem(
-                            text="⏸️ Воспроизведения нет",
+                            text="⏸️ No playback",
                             action=None,
                         ),
                         pystray.MenuItem(
-                            text="⛔ Завершить",
+                            text="⛔ Stop",
                             action=self._fStop
                         )
                      )
@@ -33,7 +31,7 @@ class Tray(pystray.Icon):
                             action=None,
                         ),
                         pystray.MenuItem(
-                            text="⛔ Завершить",
+                            text="⛔ Stop",
                             action=self._fStop
                         )
             )
@@ -51,14 +49,14 @@ class Tray(pystray.Icon):
         
     def spotify(self, track: str, artist: str, album: str):
         """
-        Установить состояние проигрывателя Spotify
+        Set tray Spotify track info
         """
         
         self.menu = self._menuGenerator(track, artist, album)
         
     def displayColor(self, r: int, g: int, b: int):
         """
-        Вывести цвет системы
+        Display system color
         """
         newIcon = Image.new('RGBA', (42, 42))
         draw = ImageDraw.Draw(newIcon)

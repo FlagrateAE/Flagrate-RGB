@@ -1,0 +1,7 @@
+pystray
+Pillow
+spotipy
+colorist
+colorsys
+Pylette
+pyserial

@@ -32,7 +32,7 @@ class SpotifyColorExtractor:
         print("Spotify connected")
         
         
-    def _isColorGrayscale(self, color, tolerance: int = 10) -> bool:
+    def _isColorGrayscale(self, color, tolerance: int = 7.5) -> bool:
         """
         Check if a color is in the black-white range (grayscale).
         
@@ -41,7 +41,7 @@ class SpotifyColorExtractor:
         color : tuple or list
             RGB color values (0-255)
         tolerance : int 
-            Maximum allowed difference between color channels (default: 10)
+            Maximum allowed difference between color channels (default: 6. This is experimentally chosen value)
         
         Returns
         -------
@@ -57,7 +57,7 @@ class SpotifyColorExtractor:
         # Check if all color values are within the tolerance range of the average
         return all(abs(color - avg) <= tolerance for color in (r, g, b))
         
-    def _isImageGrayscale(self, imageURL: str, tolerance: int = 10, _logging: bool = False) -> bool:
+    def _isImageGrayscale(self, imageURL: str, tolerance: int = 7.5, _logging: bool = False) -> bool:
         """
         Check if a image`s color palette is grayscale.
         
@@ -66,7 +66,7 @@ class SpotifyColorExtractor:
         imageURL : str
             URL of examined image
         tolerance : int
-            Maximum allowed difference between color channels (default: 10)
+            Maximum allowed difference between color channels (default: 6. This is experimentally chosen value)
         _logging : bool
             Whether to print advanced debug messages (default: False)
         
@@ -83,14 +83,20 @@ class SpotifyColorExtractor:
         if _logging:print("Palette extracted for grayscale detection:")
         
         for color in palette.colors:
-            rgb(color.rgb, color.rgb[0], color.rgb[1], color.rgb[2])
-            grayscalance.append(self._isColorGrayscale(color.rgb))
+            rgb(tuple(color.rgb), color.rgb[0], color.rgb[1], color.rgb[2])
+            grayscalance.append(self._isColorGrayscale(color=color.rgb, tolerance=tolerance))
             
-            if _logging:print(grayscalance[-1])
+            if _logging:
+                print("Grayscale") if grayscalance[-1] == True else print("Not grayscale")
+                
+        result = all(grayscalance)
         
-        return grayscalance[0] == grayscalance[1] == grayscalance[2] == True
+        if _logging:
+            print("The image is grayscale") if result == True else print("Image is colorful")
         
-    def getCurrentPlayback(self, _logging: bool = False) -> None | tuple[str, str, str, str, str]:
+        return result
+        
+    def getCurrentPlayback(self) -> tuple[str, str, str, str, str] | None:
         """Get current playing track necessary information
         
         Parameters
@@ -116,9 +122,8 @@ class SpotifyColorExtractor:
         albumID = result['item']['album']['id']
         imageURL = result['item']['album']['images'][2]['url']
         
-        if _logging:print(f"Album: {albumName}, albumID: {albumID}, imageURL: {imageURL}, track: {track}, artist: {artist}")
-        
         return albumName, albumID, imageURL, track, artist
+    
     
     def extractMainColor(self, imageURL: str, _logging: bool = False) -> tuple[int, int, int]:
         """
@@ -151,4 +156,8 @@ class SpotifyColorExtractor:
             url="https://flagrate-vibrant-api.vercel.app?icon_id=" + imageID,
             headers={'Accept': 'application/json'}).json()
         
-        return colors["vibrant"]
+        if _logging:
+            for color in colors:
+                rgb(f"{color}: {tuple(colors[color])}", colors[color][0], colors[color][1], colors[color][2])
+        
+        return tuple(colors["vibrant"])

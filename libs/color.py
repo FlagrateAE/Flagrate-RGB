@@ -32,18 +32,20 @@ class SpotifyColorExtractor:
         print("Spotify connected")
         
         
-    def _isColorGrayscale(color: tuple[int, int, int], tolerance: int = 10) -> bool:
+    def _isColorGrayscale(self, color, tolerance: int = 10) -> bool:
         """
         Check if a color is in the black-white range (grayscale).
         
         Args:
-        r, g, b (int): RGB color values (0-255)
+        [r, g, b]: tuple or list RGB color values (0-255)
         tolerance (int): Maximum allowed difference between color channels (default: 10)
         
         Returns:
         bool: True if the color is grayscale, False otherwise
         """
-        r, g, b = color[0], color[1], color[2]
+        r = color[0]
+        g = color[1]
+        b = color[2]
         
         # Calculate the average of the RGB values
         avg = (r + g + b) / 3
@@ -51,6 +53,11 @@ class SpotifyColorExtractor:
         # Check if all color values are within the tolerance range of the average
         return all(abs(color - avg) <= tolerance for color in (r, g, b))
         
+    def _isImageGrayscale(self, imageURL: str, tolerance: int = 10) -> bool:
+        image = requests.get(url=imageURL).content
+        palette = extract_colors(image=image, palette_size=3)
+        
+        return self._isColorGrayscale(palette[0].color, tolerance=tolerance) and self._isColorGrayscale(palette[1].color, tolerance=tolerance) and self._isColorGrayscale(palette[2].color, tolerance=tolerance)
         
     def getCurrentPlayback(self) -> None | tuple[str, str, str, str, str]:
         """Get current playing track necessary information
@@ -97,24 +104,18 @@ class SpotifyColorExtractor:
         This function is suited for displaying color on RGB LED. Thus, vibrant colors are further exagerrated because dark colors on RGB LED look poor (for example, to display brown, you have to dim the orange). Also for the same reason any grayscale colors are displayed as white.
         """
         
-        # check for relatively grayscale image. for this, extract main 3 colors palette.  
-        palette = extract_colors(image=requests.get(url=imageURL).content, palette_size=3)
-        for c in palette.colors:
-            crgb = c.rgb
-            rgb(crgb, crgb[0], crgb[1], crgb[2])
-            
-            chsl = rgb_to_hls(crgb[0]/255, crgb[1]/255, crgb[2]/255)
-            hsl(f"{chsl[0]*360:.2f} {chsl[2]*100:.2f} {chsl[1]*100:.2f}", chsl[0]*360, chsl[1]*100, chsl[2]*100)
+        # check for relatively grayscale image. for this, extract main 3 colors palette. if so, return just white
+        if self._isImageGrayscale(imageURL):
+            return (255, 255, 255)
         
+        # if not grayscale, proceed with vibrant color from flagrate vibrant api
         imageID = imageURL.split("/")[-1]
         
         colors: dict = requests.get(
             url="https://flagrate-vibrant-api.vercel.app?icon_id=" + imageID,
             headers={'Accept': 'application/json'}).json()
         
-        # print(colors)
-        # check
-
+        
         
         # # if muted color has HSL saturation <= 10% (on grayscale), use white
         # # else use vibrant color

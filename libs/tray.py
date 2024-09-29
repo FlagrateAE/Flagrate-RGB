@@ -69,18 +69,14 @@ class Tray(pystray.Icon):
             )
   
     
-    def displayColor(self, r: int, g: int, b: int):
+    def displayColor(self, color: tuple[int, int, int]):
         """
         Set tray icon color.
         
         Parameters
         ----------
-        r : int
-            Red channel of RGB
-        g : int
-            Green channel of RGB
-        b : int
-            Blue channel of RGB
+        color : tuple[int, int, int]
+            RGB color values: (r, g, b)
         """
         newIcon = Image.new('RGBA', (42, 42))
         draw = ImageDraw.Draw(newIcon)
@@ -90,7 +86,7 @@ class Tray(pystray.Icon):
         # inner black
         draw.ellipse([(2, 2), (38, 38)], fill='black')
         # display desired color
-        draw.ellipse([(4, 4), (36, 36)], fill=(r, g, b))            
+        draw.ellipse([(4, 4), (36, 36)], fill=color)      
         
         newIcon = Image.alpha_composite(
             im1=newIcon,
@@ -119,5 +115,5 @@ class Tray(pystray.Icon):
         """
         
         self.menu = self._menuGenerator(track, artist, album)
-        self.displayColor(color[0], color[1], color[2])
+        self.displayColor(color)
         

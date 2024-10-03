@@ -1,0 +1,36 @@
+Send with: IrSender.sendNEC(0xEF00, <command>, <numberOfRepeats>)
+
+
+0 = OFF = 0x2
+1 = ON = 0x3 
+2 = BRIGHT UP = 0x0
+(Repeat gap=39500us)
+3 = BRIGHT DOWN = 0x1
+
+4 = R = 0x4
+5 = R1 = 0x8
+6 = R2 = 0xC
+7 = R3 = 0x10
+8 = R4 = 0x14
+
+9 = G = 0x5
+10 = G1 = 0x9
+11 = G2 = 0xD
+
+12 = WHITE = 0x7
+
+13 = G3 = 0x11
+14 = G4 = 0x15
+
+15 = B = 0x6
+16 = B1 = 0xA
+17 = B2 = 0xE
+18 = B3 = 0x12
+19 = B4 = 0x16
+
+
+
+20 = FLASH R-G-B (МЕРЦАНИЕ-3) = 0xB NOT USED
+21 = STROBE SMOOTH R-G-B (ПЕРЕХОД) = 0xF
+22 = FADE VIA WHITE R-G-B (ПРОБЕЛ) = 0x13 NOT USED
+23 = SMOOTH FLASH R-G-B AND RG-GB-RB (МЕРЦАНИЕ) = 0x17

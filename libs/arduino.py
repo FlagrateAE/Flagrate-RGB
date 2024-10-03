@@ -15,8 +15,39 @@ class Arduino(Serial):
         
         time.sleep(2)
         print("Arduino connected")
+    
+    def send(self, data: str):
+        """Send text data to Arduino via serial
         
-        self._IR_COLOR_CODES = {
+        Parameters
+        ----------
+        data : str
+        Text data to be sent"""
+        self.write(bytes(data, 'utf-8'))
+    
+    def receive(self):
+        return self.readline()
+    
+
+def _getNearestColorCode(color: tuple[int, int, int]) -> tuple:
+        """
+        Get nearest color code from colors available in RGB LED.
+        
+        Note
+        ----
+        This is highly narrow solution. You would probably need to do it yourself accordinly to your RGB light source. In my case, it is an RGB LED strip with 16 colors available (5 R, G, and B tones each + white).
+        
+        Parameters
+        ---------
+        color : tuple[int, int, int]
+            RGB color values: (r, g, b)
+            
+        Returns
+        -------
+        tuple : (int, tuple[int, int, int])
+            Color code in my case and color RGB values
+        """
+        _LED_COLOR_CODES = {
             (255,0,0): 4,
             (255,175,0): 5,
             (212,255,0): 6,
@@ -34,41 +65,15 @@ class Arduino(Serial):
             (145,0,255): 18,
             (190,0,255): 19
         }
-    
-    def send(self, data: str):
-        """Send text data to Arduino via serial
         
-        Parameters
-        ----------
-        data : str
-        Text data to be sent"""
-        self.write(bytes(data, 'utf-8'))
-    
-    def receive(self):
-        return self.readline()
-    
-    def _getNearestColorCode(self, color: tuple[int, int, int]) -> int:
-        """
-        Get nearest color code from colors available in RGB LED.
-        
-        Note
-        ----
-        This is highly narrow solution. You would probably need to do it yourself accordinly to your RGB light source. In my case, it is an RGB LED strip with 16 colors available (5 R, G, and B tones each + white).
-        
-        Parameters
-        ---------
-        color : tuple[int, int, int]
-            RGB color values: (r, g, b)
-        """
-        
-        bestResult = [-1, -1] # [color code, similarity]
+        bestResult = [-1, -1, (-1, -1, -1)] # [color code, similarity, color]
         maxPoints = 255 * 3
-        for color in self._IR_COLOR_CODES:
-            diff = abs(color[0] - color[0]) + abs(color[1] - color[1]) + abs(color[2] - color[2])
+        for ledColor in _LED_COLOR_CODES:
+            diff = abs(ledColor[0] - color[0]) + abs(ledColor[1] - color[1]) + abs(ledColor[2] - color[2])
             
             similarity = (maxPoints - diff)/maxPoints
             
             if similarity > bestResult[1]:
-                bestResult = [self._IR_COLOR_CODES[color], similarity]
+                bestResult = [_LED_COLOR_CODES[ledColor], similarity, ledColor]
         
-        return bestResult[0]
+        return bestResult[0], bestResult[2]

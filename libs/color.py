@@ -32,7 +32,7 @@ class SpotifyColorExtractor:
         print("Spotify connected")
         
         
-    def _isColorGrayscale(self, color, tolerance: int = 7.5) -> bool:
+    def _isColorGrayscale(self, color, tolerance: int = 6.5) -> bool:
         """
         Check if a color is in the black-white range (grayscale).
         
@@ -57,7 +57,7 @@ class SpotifyColorExtractor:
         # Check if all color values are within the tolerance range of the average
         return all(abs(color - avg) <= tolerance for color in (r, g, b))
         
-    def _isImageGrayscale(self, imageURL: str, tolerance: int = 7.5, _logging: bool = False) -> bool:
+    def _isImageGrayscale(self, imageURL: str, tolerance: int = 6.5, _logging: bool = False) -> bool:
         """
         Check if a image`s color palette is grayscale.
         
@@ -83,10 +83,10 @@ class SpotifyColorExtractor:
         if _logging:print("Palette extracted for grayscale detection:")
         
         for color in palette.colors:
-            rgb(tuple(color.rgb), color.rgb[0], color.rgb[1], color.rgb[2])
             grayscalance.append(self._isColorGrayscale(color=color.rgb, tolerance=tolerance))
             
             if _logging:
+                rgb(tuple(color.rgb), color.rgb[0], color.rgb[1], color.rgb[2])
                 print("Grayscale") if grayscalance[-1] == True else print("Not grayscale")
                 
         result = all(grayscalance)
@@ -112,15 +112,15 @@ class SpotifyColorExtractor:
         
         result = self.client.current_playback()
         
-        if not result:
+        try:
+            track = result['item']['name']
+            artist = result['item']['artists'][0]['name']
+            albumName = result['item']['album']['name']
+            # albumID for dealing with non-ASCII named albums
+            albumID = result['item']['album']['id']
+            imageURL = result['item']['album']['images'][0]['url']
+        except:
             return None
-        
-        track = result['item']['name']
-        artist = result['item']['artists'][0]['name']
-        albumName = result['item']['album']['name']
-        # albumID for dealing with non-ASCII named albums
-        albumID = result['item']['album']['id']
-        imageURL = result['item']['album']['images'][2]['url']
         
         return albumName, albumID, imageURL, track, artist
     

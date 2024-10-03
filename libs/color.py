@@ -1,9 +1,25 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import requests
-from colorsys import rgb_to_hls
-from Pylette import extract_colors
-from colorist import hsl, rgb
+from colorist import rgb
+import libs.utils as utils
+
+class Playback:
+    def __init__(self, currentPlayback: dict) -> None:
+        """
+        Contruct a Playback object from Spotify current playback
+        
+        Parameters
+        ----------
+        currentPlayback : dict
+            Spotify current playback recieved from spotipy.Spotify.current_playback()
+        """
+        self.track:str = currentPlayback['item']['name']
+        self.artist:str = currentPlayback['item']['artists'][0]['name']
+        self.albumName:str = currentPlayback['item']['album']['name']
+        # albumID for dealing with non-ASCII named albums
+        self.albumID:str = currentPlayback['item']['album']['id']
+        self.imageURL:str = currentPlayback['item']['album']['images'][0]['url']
 
 class SpotifyColorExtractor:
     def __init__(self, clientID: str, clientSecret: str, redirectURI: str):
@@ -31,72 +47,8 @@ class SpotifyColorExtractor:
         
         print("Spotify connected")
         
-        
-    def _isColorGrayscale(self, color, tolerance: int = 6.5) -> bool:
-        """
-        Check if a color is in the black-white range (grayscale).
-        
-        Parameters
-        ----------
-        color : tuple or list
-            RGB color values (0-255)
-        tolerance : int 
-            Maximum allowed difference between color channels (default: 6. This is experimentally chosen value)
-        
-        Returns
-        -------
-        bool : True if the color is grayscale, False otherwise
-        """
-        r = color[0]
-        g = color[1]
-        b = color[2]
-        
-        # Calculate the average of the RGB values
-        avg = (r + g + b) / 3
-        
-        # Check if all color values are within the tolerance range of the average
-        return all(abs(color - avg) <= tolerance for color in (r, g, b))
-        
-    def _isImageGrayscale(self, imageURL: str, tolerance: int = 6.5, _logging: bool = False) -> bool:
-        """
-        Check if a image`s color palette is grayscale.
-        
-        Parameters
-        ----------
-        imageURL : str
-            URL of examined image
-        tolerance : int
-            Maximum allowed difference between color channels (default: 6. This is experimentally chosen value)
-        _logging : bool
-            Whether to print advanced debug messages (default: False)
-        
-        Returns
-        --------
-        bool : True if the image is grayscale, False otherwise
-        """
-        
-        image = requests.get(url=imageURL).content
-        palette = extract_colors(image=image, palette_size=3)
-        
-        grayscalance = []
-        
-        if _logging:print("Palette extracted for grayscale detection:")
-        
-        for color in palette.colors:
-            grayscalance.append(self._isColorGrayscale(color=color.rgb, tolerance=tolerance))
-            
-            if _logging:
-                rgb(tuple(color.rgb), color.rgb[0], color.rgb[1], color.rgb[2])
-                print("Grayscale") if grayscalance[-1] == True else print("Not grayscale")
-                
-        result = all(grayscalance)
-        
-        if _logging:
-            print("The image is grayscale") if result == True else print("Image is colorful")
-        
-        return result
-        
-    def getCurrentPlayback(self) -> tuple[str, str, str, str, str] | None:
+      
+    def getCurrentPlayback(self) -> Playback | None:
         """Get current playing track necessary information
         
         Parameters
@@ -106,23 +58,17 @@ class SpotifyColorExtractor:
         
         Returns
         -------
-        tuple : (albumName, albumID, imageURL, track, artist)
+        Playback : if track is playing
         None : if no track is playing
         """
         
         result = self.client.current_playback()
         
         try:
-            track = result['item']['name']
-            artist = result['item']['artists'][0]['name']
-            albumName = result['item']['album']['name']
-            # albumID for dealing with non-ASCII named albums
-            albumID = result['item']['album']['id']
-            imageURL = result['item']['album']['images'][0]['url']
+            playback = Playback(result)
+            return playback
         except:
             return None
-        
-        return albumName, albumID, imageURL, track, artist
     
     
     def extractMainColor(self, imageURL: str, _logging: bool = False) -> tuple[int, int, int]:
@@ -146,9 +92,9 @@ class SpotifyColorExtractor:
         """
         
         # check for relatively grayscale image. for this, extract main 3 colors palette. if so, return just white
-        if self._isImageGrayscale(imageURL=imageURL, _logging=_logging):
-            return (255, 255, 255)
         
+        if utils.isImageGrayscale(imageURL=imageURL, _logging=_logging):
+            return (255, 255, 255)
         # if not grayscale, proceed with vibrant color from flagrate vibrant api
         imageID = imageURL.split("/")[-1]
         

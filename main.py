@@ -1,10 +1,12 @@
 from libs.tray import Tray
-from libs.arduino import Arduino, _getNearestColorCode
-from libs.color import SpotifyColorExtractor
+from libs.arduino import Arduino
+from libs.color import SpotifyColorExtractor, Playback
+from libs.utils import getNearestColorCode
 
 import os
 import time
 from colorist import rgb
+import yaml
 
 def RUN():
     arduino = Arduino("COM3")
@@ -18,15 +20,15 @@ def RUN():
     lastAlbumID = None
     while tray.fRunning:
         
-        currentlyPlaying = sp.getCurrentPlayback()
+        playback = sp.getCurrentPlayback()
         
-        if currentlyPlaying:
-            currentAlbumID = currentlyPlaying[1]
+        if playback:
+            currentAlbumID = playback.albumID
             
             if currentAlbumID != lastAlbumID:
-                print(currentlyPlaying)
+                print(yaml.dump(playback.__dict__))
                 
-                mainColor = sp.extractMainColor(currentlyPlaying[2], True)
+                mainColor = sp.extractMainColor(imageURL=playback.imageURL, _logging=True)
                 rgb(f"Main color exctracted: {mainColor}", mainColor[0], mainColor[1], mainColor[2])
                 
                 lastAlbumID = currentAlbumID
@@ -36,16 +38,13 @@ def RUN():
                     
                     arduino.send("12.")
                 else:
-                    command, ardColor = _getNearestColorCode(mainColor)
+                    command, ardColor = getNearestColorCode(mainColor)
                     
                     rgb(f"MAIN COLOR: {ardColor}", ardColor[0], ardColor[1], ardColor[2])
                     print(f"COMMAND = {command}.")
                     
                     arduino.send(f"{command}.")
-
-            else:
-                time.sleep(2)
-                continue
+                    tray.spotify(playback=playback, color=ardColor)
         else:
             lastAlbumID = None
             print("No playback detected")

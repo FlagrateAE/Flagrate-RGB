@@ -1,6 +1,7 @@
 import pystray
 from PIL import Image, ImageDraw
 from time import sleep
+from libs.color import Playback
 
 class Tray(pystray.Icon):          
     def __init__(self) -> None:
@@ -12,7 +13,7 @@ class Tray(pystray.Icon):
             name="flagratergb",
             title="Flagrate RGB",
             menu=self._menuGenerator(track=None, artist=None, album=None),
-            icon=Image.open("libs/drawable/icon.ico")
+            icon=Image.open("libs/drawable/icon.png")
         )
         self.fRunning = True
         self.run_detached()
@@ -98,7 +99,7 @@ class Tray(pystray.Icon):
         
         self.icon = newIcon
     
-    def spotify(self, track: str, artist: str, album: str, color: tuple[int, int, int]):
+    def spotify(self, playback: Playback, color: tuple[int, int, int]):
         """
         Set playing track info to be displayed in tray icon menu.
         
@@ -114,6 +115,6 @@ class Tray(pystray.Icon):
             RGB color values: (r, g, b)
         """
         
-        self.menu = self._menuGenerator(track, artist, album)
+        self.menu = self._menuGenerator(playback.track, playback.artist, playback.albumName)
         self.displayColor(color)
         

@@ -36,6 +36,7 @@ def RUN():
                 if mainColor == (255, 255, 255):
                     print("COMMAND = 12.")
                     
+                    ardColor = mainColor
                     arduino.send("12.")
                 else:
                     command, ardColor = getNearestColorCode(mainColor)
@@ -44,7 +45,8 @@ def RUN():
                     print(f"COMMAND = {command}.")
                     
                     arduino.send(f"{command}.")
-                    tray.spotify(playback=playback, color=ardColor)
+                
+                tray.spotify(playback=playback, color=ardColor)
         else:
             lastAlbumID = None
             print("No playback detected")

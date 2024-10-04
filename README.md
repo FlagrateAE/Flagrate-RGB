@@ -2,7 +2,6 @@
  Python app for users that want to add some ambiance to their workplace
 
 # Structure
-
  This project consists of 2 parts: local-side (Python) and microcontroller-side (Arduino).
 
 # Local-side

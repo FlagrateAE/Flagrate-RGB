@@ -2,6 +2,27 @@ import requests
 from Pylette import extract_colors
 from colorist import rgb
 
+class Playback:
+    def __init__(self, currentPlayback: dict) -> None:
+        """
+        Construct a Playback object from Spotify current playback
+        
+        Parameters
+        ----------
+        currentPlayback : dict
+            Spotify current playback recieved from spotipy.Spotify.current_playback()
+        """
+        self.track:str = currentPlayback['item']['name']
+        self.artist:str = currentPlayback['item']['artists'][0]['name']
+        
+        self.albumName:str = currentPlayback['item']['album']['name']
+        # albumID for dealing with non-ASCII named albums
+        self.albumID:str = currentPlayback['item']['album']['id']
+        
+        self.bigImage:str = currentPlayback['item']['album']['images'][0]['url']
+        self.smallImage:str = currentPlayback['item']['album']['images'][2]['url']
+
+
 def isColorGrayscale(color: tuple[int, int, int], tolerance: int = 6.5) -> bool:
         """
         Check if a color is in the black-white range (grayscale).
@@ -35,7 +56,7 @@ def isImageGrayscale(imageURL: str, tolerance: int = 6.5, _logging: bool = False
         Parameters
         ----------
         imageURL : str
-            URL of examined image
+            URL of examined image (preferably small)
         tolerance : int
             Maximum allowed difference between color channels (default: 6. This is experimentally chosen value)
         _logging : bool

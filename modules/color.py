@@ -2,24 +2,8 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import requests
 from colorist import rgb
-import libs.utils as utils
-
-class Playback:
-    def __init__(self, currentPlayback: dict) -> None:
-        """
-        Contruct a Playback object from Spotify current playback
-        
-        Parameters
-        ----------
-        currentPlayback : dict
-            Spotify current playback recieved from spotipy.Spotify.current_playback()
-        """
-        self.track:str = currentPlayback['item']['name']
-        self.artist:str = currentPlayback['item']['artists'][0]['name']
-        self.albumName:str = currentPlayback['item']['album']['name']
-        # albumID for dealing with non-ASCII named albums
-        self.albumID:str = currentPlayback['item']['album']['id']
-        self.imageURL:str = currentPlayback['item']['album']['images'][0]['url']
+import modules.utils as utils
+from modules.utils import Playback
 
 class SpotifyColorExtractor:
     def __init__(self, clientID: str, clientSecret: str, redirectURI: str):
@@ -71,14 +55,14 @@ class SpotifyColorExtractor:
             return None
     
     
-    def extractMainColor(self, imageURL: str, _logging: bool = False) -> tuple[int, int, int]:
+    def extractMainColor(self, playback: Playback, _logging: bool = False) -> tuple[int, int, int]:
         """
         Extract most vibrant color from Spotify album cover image
         
         Parameters
         ----------
-        imageURL : str
-            Spotify album cover image URL in format "https://i.scdn.co/image/..."
+        playback : Playback
+            Spotify current playback
         _logging : bool
             Whether to print advanced debug messages (default: False)
             
@@ -93,10 +77,10 @@ class SpotifyColorExtractor:
         
         # check for relatively grayscale image. for this, extract main 3 colors palette. if so, return just white
         
-        if utils.isImageGrayscale(imageURL=imageURL, _logging=_logging):
+        if utils.isImageGrayscale(imageURL=playback.smallImage, _logging=_logging):
             return (255, 255, 255)
         # if not grayscale, proceed with vibrant color from flagrate vibrant api
-        imageID = imageURL.split("/")[-1]
+        imageID = playback.bigImage.split("/")[-1]
         
         colors: dict = requests.get(
             url="https://flagrate-vibrant-api.vercel.app?icon_id=" + imageID,

@@ -1,7 +1,7 @@
-from libs.tray import Tray
-from libs.arduino import Arduino
-from libs.color import SpotifyColorExtractor, Playback
-from libs.utils import getNearestColorCode
+from modules.tray import Tray
+from modules.arduino import Arduino
+from modules.color import SpotifyColorExtractor, Playback
+from modules.utils import getNearestColorCode
 
 import os
 import time
@@ -19,7 +19,6 @@ def RUN():
     
     lastAlbumID = None
     while tray.fRunning:
-        
         playback = sp.getCurrentPlayback()
         
         if playback:
@@ -28,7 +27,7 @@ def RUN():
             if currentAlbumID != lastAlbumID:
                 print(yaml.dump(playback.__dict__))
                 
-                mainColor = sp.extractMainColor(imageURL=playback.imageURL, _logging=True)
+                mainColor = sp.extractMainColor(playback=playback, _logging=True)
                 rgb(f"Main color exctracted: {mainColor}", mainColor[0], mainColor[1], mainColor[2])
                 
                 lastAlbumID = currentAlbumID

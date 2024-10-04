@@ -51,7 +51,7 @@ def RUN():
                     rgb(
                         f"MAIN COLOR: {ardColor}", ardColor[0], ardColor[1], ardColor[2]
                     )
-                    print(f"COMMAND = {command}.")
+                    print(f"COMMAND = {command}.\n")
 
                     arduino.send(f"{command}.")
 

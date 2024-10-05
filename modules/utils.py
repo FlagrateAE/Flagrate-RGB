@@ -1,4 +1,5 @@
-from colorist import rgb
+from colorist import rgb, hsl as hls
+from chromato import convert
 from Pylette import Palette
 
 
@@ -19,8 +20,11 @@ class Playback:
         # albumID for dealing with non-ASCII named albums
         self.albumID: str = currentPlayback["item"]["album"]["id"]
 
-        self.bigImage: str = currentPlayback["item"]["album"]["images"][0]["url"]
-        self.smallImage: str = currentPlayback["item"]["album"]["images"][2]["url"]
+        self.imageURL: str = currentPlayback["item"]["album"]["images"][0]["url"]
+
+
+def clamp(val: int, minVal: int, maxVal: int) -> int:
+    return max(min(val, maxVal), minVal)
 
 
 def isColorGrayscale(
@@ -54,6 +58,28 @@ def isColorGrayscale(
 
     # Check if all color values are within the tolerance range of the average
     return all(abs(color - avg) <= tolerance for color in (r, g, b))
+
+
+def RGB2HLS(color: tuple[int, int, int]) -> tuple[int, int, int]:
+    """
+    Convert RGB color to HSL color.
+
+    Parameters
+    ----------
+    color : tuple[int, int, int]
+        RGB color values: R (0-255), G (0-255), B (0-255)
+
+    Returns
+    -------
+    tuple[int, int, int]
+        HSL color values: Hue (0-360), Lightness (0-100), Saturation (0-100)
+    """
+    result = convert.rgb_to_hsl(color)
+    hue = clamp(int(result.h * 360), 0, 360)
+    lightness = clamp(int(result.l * 100), 0, 100)
+    saturation = clamp(int(result.s * 100), 0, 100)
+
+    return hue, lightness, saturation
 
 
 def getImageGrayscalance(
@@ -92,7 +118,10 @@ def getImageGrayscalance(
 
     return grayscalance
 
-def getColorsSimilarity(color1: tuple[int, int, int], color2: tuple[int, int, int]) -> float:
+
+def getColorsSimilarity(
+    color1: tuple[int, int, int], color2: tuple[int, int, int]
+) -> float:
     """
     Get similarity between two colors.
 
@@ -107,16 +136,17 @@ def getColorsSimilarity(color1: tuple[int, int, int], color2: tuple[int, int, in
     -------
     float : similarity between two colors in normalized range [0, 1]
     """
-    
-    maxPoints = 255*3
+
+    maxPoints = 255 * 3
     diff = (
-            abs(color1[0] - color2[0])
-            + abs(color1[1] - color2[1])
-            + abs(color1[2] - color2[2])
-        )
+        abs(color1[0] - color2[0])
+        + abs(color1[1] - color2[1])
+        + abs(color1[2] - color2[2])
+    )
     similarity = (maxPoints - diff) / maxPoints
-    
+
     return similarity
+
 
 def getNearestColorCode(color: tuple[int, int, int], _logging: bool = False) -> tuple:
     """
@@ -157,15 +187,27 @@ def getNearestColorCode(color: tuple[int, int, int], _logging: bool = False) -> 
         (190, 0, 255): 19,
     }
     
-    if _logging: print("\nNow seeking among the available colors...")
+    # max out the saturation
+    colorHLS = RGB2HLS(color)
+    colorHLS = colorHLS[0], 100, colorHLS[2]
+    color = tuple(convert.hsl_to_rgb(colorHLS[0]/360, 1, colorHLS[2]/100))
     
+    if _logging:
+        print("\nSaturation is maxed out for RGB LED, result:")
+        rgb(f"HSL{colorHLS} = RGB{color}", color[0], color[1], color[2])
+        print("\nNow seeking among the available colors...")
+
     bestResult = {"code": -1, "similarity": -1.0, "color": (-1, -1, -1)}
 
     for ledColor in LED_COLOR_CODES:
         similarity = getColorsSimilarity(ledColor, color)
 
-        if _logging: print(f"Analyzing {ledColor}: {similarity}")
+        if _logging: rgb(f"analysing {ledColor}: {similarity}", ledColor[0], ledColor[1], ledColor[2])
         if similarity > bestResult["similarity"]:
-            bestResult = {"code": LED_COLOR_CODES[ledColor], "similarity": similarity, "color": ledColor}
+            bestResult = {
+                "code": LED_COLOR_CODES[ledColor],
+                "similarity": similarity,
+                "color": ledColor,
+            }
 
     return bestResult["code"], bestResult["color"]

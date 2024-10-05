@@ -14,9 +14,6 @@
  Uses "IRremote.h" Arduino library to send IR commands to the RGB light source (RGB LED strip in my case). Receives commands sent via serial communication from the local-side. Requires IR LED to work.
  You should probably customize this part for your case.
 
-# Current todo`s
-- [ ] Sort palette colors, taking out grayscale ones and ones with HSL saturation not high enough, which may lead to more accurate and vibrant color picking
-
 # Roadmap
 - [ ] **Some sort of caching** to reduce API requests and processing
 - [ ] **Correcting support** for cases when main color is extracted from incorrectly or you have another view of it

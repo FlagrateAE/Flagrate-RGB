@@ -2,7 +2,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import requests
 
-from colorist import rgb
+from colorist import rgb, hsl as hls
 from Pylette import extract_colors
 
 import modules.utils as utils
@@ -58,7 +58,7 @@ class SpotifyColorExtractor:
             return None
 
     def extractMainColor(
-        self, playback: Playback, imageURL: str, _logging: bool = False
+        self, playback: Playback, imageURL: str = None, _logging: bool = False
     ) -> tuple[int, int, int]:
         """
         Extract most vibrant color from Spotify album cover image
@@ -68,7 +68,7 @@ class SpotifyColorExtractor:
         playback : Playback
             Spotify current playback
         imageURL : str
-            For cases if you want to extract the main color outside of Spotify
+            For cases if you want to extract the main color outside of Spotify (default: None)
         _logging : bool
             Whether to print advanced debug messages (default: False)
 
@@ -82,17 +82,56 @@ class SpotifyColorExtractor:
         """
 
         if playback:
-            imageURL = playback.bigImage
+            imageURL = playback.imageURL
         elif not imageURL:
             raise ValueError("No image URL provided")
         
         
-        # extract main 6 colors palette from smaller image. if so, return just white
-        palette = extract_colors(image=imageURL, palette_size=6)
-
-        grayscalance = utils.getImageGrayscalance(palette=palette, _logging=_logging)
-        if all(grayscalance):
+        # extract main 5 colors palette from smaller image
+        palette = extract_colors(image=imageURL, palette_size=5).colors
+        vibrantPalette = [] # here will be colors suitable for further processing
+        
+        if _logging: print("Colors extracted for grayscale check (RGB):")
+        
+        for paletteColor in palette:
+            paletteRGB = tuple(paletteColor.rgb)
+            if _logging: rgb(f"{paletteRGB}", paletteRGB[0], paletteRGB[1], paletteRGB[2])
+            
+            # check if each color is grayscale
+            if utils.isColorGrayscale(paletteRGB):
+                print("Grayscale")
+            else:
+                vibrantPalette.append(paletteRGB)
+                print("Not grayscale")
+        
+        # proceed with HLS threshold analysis
+        if not vibrantPalette:
+            if _logging: print("The image is grayscale")
             return (255, 255, 255)
+        else:
+            if _logging: print("\nHLS threshold analysis:")
+          
+        for color in vibrantPalette.copy():
+            paletteHLS = utils.RGB2HLS(color)
+            
+            if paletteHLS[1] < 15 or paletteHLS[1] > 85: # too dark ot too bright
+                msg = "too dark or too bright"
+                vibrantPalette.remove(color)
+            elif paletteHLS[2] < 15: # too unvibrant
+                msg = "too unvibrant"
+                vibrantPalette.remove(color)
+            else:
+                msg = "appropriate"
+                
+            if _logging: hls(f"{paletteHLS} - {msg}", paletteHLS[0], paletteHLS[1], paletteHLS[2])
+        
+        if not vibrantPalette:
+            return (255, 255, 255)
+            
+        if _logging:
+            print("\nFinal vibrant palette in RGB:")
+            for color in vibrantPalette:
+                rgb(f"{color}", color[0], color[1], color[2])
 
         # if not grayscale, get vibrant and muted colors from flagrate vibrant api
         imageID = imageURL.split("/")[-1]
@@ -111,21 +150,21 @@ class SpotifyColorExtractor:
                     apiColor[2]
                 )
 
-        # get first not grayscale color from palette
-        for i, paletteColor in enumerate(palette.colors):
-            # if palette color is grayscale, proceed to next
-            if grayscalance[i]: continue
+        # searching for 
+        for paletteColor in vibrantPalette:
+            if _logging: rgb(f"\nAnalysing colors according to palette color: {paletteColor}", paletteColor[0], paletteColor[1], paletteColor[2])
             
-            print("\nAnalyzing colors according to palette color:", paletteColor.rgb)
             bestResult = {"similarity": -1.0, "color": (-1, -1, -1)}
             for apiColor in apiColors.values():
-                similarity = utils.getColorsSimilarity(paletteColor.rgb, apiColor)
-                print(f"Analyzing {apiColor}: {similarity}")
+                similarity = utils.getColorsSimilarity(paletteColor, apiColor)
+                print(f"analysing {apiColor}: {similarity}")
                 
                 if similarity > bestResult["similarity"]:
                     bestResult = {"similarity": similarity, "color": tuple(apiColor)}
             
             bestColor = bestResult["color"]
+            
+            # check if suited api color is grayscale
             if utils.isColorGrayscale(bestColor):
                 print("Color is grayscale")
                 continue

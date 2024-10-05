@@ -58,7 +58,7 @@ class SpotifyColorExtractor:
             return None
 
     def extractMainColor(
-        self, playback: Playback, _logging: bool = False
+        self, playback: Playback, imageURL: str, _logging: bool = False
     ) -> tuple[int, int, int]:
         """
         Extract most vibrant color from Spotify album cover image
@@ -67,6 +67,8 @@ class SpotifyColorExtractor:
         ----------
         playback : Playback
             Spotify current playback
+        imageURL : str
+            For cases if you want to extract the main color outside of Spotify
         _logging : bool
             Whether to print advanced debug messages (default: False)
 
@@ -79,15 +81,21 @@ class SpotifyColorExtractor:
         This function is suited for displaying color on RGB LED. Thus, vibrant colors are meant to be further exagerrated because dark colors on RGB LED look poor (for example, to display brown, you have to dim the orange). For the same reason any grayscale colors are displayed as white.
         """
 
-        # check for relatively grayscale image. for this, extract main 3 colors palette from smaller image. if so, return just white
-        palette = extract_colors(image=playback.bigImage, palette_size=6)
+        if playback:
+            imageURL = playback.bigImage
+        elif not imageURL:
+            raise ValueError("No image URL provided")
+        
+        
+        # extract main 6 colors palette from smaller image. if so, return just white
+        palette = extract_colors(image=imageURL, palette_size=6)
 
         grayscalance = utils.getImageGrayscalance(palette=palette, _logging=_logging)
         if all(grayscalance):
             return (255, 255, 255)
 
         # if not grayscale, get vibrant and muted colors from flagrate vibrant api
-        imageID = playback.bigImage.split("/")[-1]
+        imageID = imageURL.split("/")[-1]
         apiColors: dict = requests.get(
             url="https://flagrate-vibrant-api.vercel.app?icon_id=" + imageID,
             headers={"Accept": "application/json"},

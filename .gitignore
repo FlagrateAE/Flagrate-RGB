@@ -1,6 +1,8 @@
 # my test scripts
 tc.py
 tlast.py
+main.pyw
+deconsolate.bat
 
 # VS Code
 .vscode

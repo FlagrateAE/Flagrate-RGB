@@ -28,7 +28,7 @@ def clamp(val: int, minVal: int, maxVal: int) -> int:
 
 
 def isColorGrayscale(
-    color: tuple[int, int, int], tolerance: int = 6.5, blackwhiteThreshold: int = 35
+    color: tuple[int, int, int], tolerance: int = 7, blackwhiteThreshold: int = 34
 ) -> bool:
     """
     Check if a color is in the black-white range (grayscale).
@@ -165,49 +165,37 @@ def getNearestColorCode(color: tuple[int, int, int], _logging: bool = False) -> 
 
     Returns
     -------
-    tuple : (int, tuple[int, int, int])
-        Color code in my case and color RGB values
+    tuple[int, tuple[int, int, int]] : Color code in my case and RGB values (0-255) of best mathcing color
     """
     LED_COLOR_CODES = {
-        (255, 0, 0): 4,
-        (255, 175, 0): 5,
-        (212, 255, 0): 6,
-        (175, 255, 0): 7,
-        (166, 255, 0): 8,
-        (0, 255, 0): 9,
-        (0, 255, 200): 10,
-        (0, 255, 242): 11,
-        # (255, 255, 255): 12,
-        (0, 175, 255): 13,
-        (0, 149, 255): 14,
-        (0, 0, 255): 15,
-        (50, 0, 255): 16,
-        (100, 0, 255): 17,
-        (145, 0, 255): 18,
-        (190, 0, 255): 19,
-    }
+        0: 4,
+        41: 5,
+        80: 6,
+        90: 7,
+        100: 8,
+        120: 9,
+        167: 10,
+        177: 11,
+        199: 13,
+        205: 14,
+        240: 15,
+        252: 16,
+        264: 17,
+        274: 18,
+        285: 19,
+        360: 4
+    } # hue: code
     
-    # max out the saturation
     colorHLS = RGB2HLS(color)
-    colorHLS = colorHLS[0], 100, colorHLS[2]
-    color = tuple(convert.hsl_to_rgb(colorHLS[0]/360, 1, colorHLS[2]/100))
     
     if _logging:
-        print("\nSaturation is maxed out for RGB LED, result:")
-        rgb(f"HSL{colorHLS} = RGB{color}", color[0], color[1], color[2])
-        print("\nNow seeking among the available colors...")
+        hls(f"Converted to HLS: {colorHLS}", colorHLS[0], colorHLS[1], colorHLS[2])
+        
+    bestHue  = min(LED_COLOR_CODES.keys(), key=lambda x: abs(x - colorHLS[0]))
+    
+    colorRGB = convert.hsl_to_rgb(bestHue/360, 1, 0.6)
+    color = colorRGB.r, colorRGB.g, colorRGB.b
 
-    bestResult = {"code": -1, "similarity": -1.0, "color": (-1, -1, -1)}
+    return LED_COLOR_CODES[bestHue], color
 
-    for ledColor in LED_COLOR_CODES:
-        similarity = getColorsSimilarity(ledColor, color)
-
-        if _logging: rgb(f"analysing {ledColor}: {similarity}", ledColor[0], ledColor[1], ledColor[2])
-        if similarity > bestResult["similarity"]:
-            bestResult = {
-                "code": LED_COLOR_CODES[ledColor],
-                "similarity": similarity,
-                "color": ledColor,
-            }
-
-    return bestResult["code"], bestResult["color"]
+print()

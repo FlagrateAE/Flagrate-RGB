@@ -117,7 +117,7 @@ class SpotifyColorExtractor:
             if paletteHLS[1] < 15 or paletteHLS[1] > 85: # too dark ot too bright
                 msg = "too dark or too bright"
                 vibrantPalette.remove(color)
-            elif paletteHLS[2] < 15: # too unvibrant
+            elif paletteHLS[2] < 20: # too unvibrant
                 msg = "too unvibrant"
                 vibrantPalette.remove(color)
             else:
@@ -129,44 +129,9 @@ class SpotifyColorExtractor:
             return (255, 255, 255)
             
         if _logging:
-            print("\nFinal vibrant palette in RGB:")
+            print("\nFinal colors:")
             for color in vibrantPalette:
                 rgb(f"{color}", color[0], color[1], color[2])
 
-        # if not grayscale, get vibrant and muted colors from flagrate vibrant api
-        imageID = imageURL.split("/")[-1]
-        apiColors: dict = requests.get(
-            url="https://flagrate-vibrant-api.vercel.app?icon_id=" + imageID,
-            headers={"Accept": "application/json"},
-        ).json()
-        
-        if _logging:
-            print("\nColors extracted by API:")
-            for name, apiColor in apiColors.items():
-                rgb(
-                    f"{name}: {tuple(apiColor)}",
-                    apiColor[0],
-                    apiColor[1],
-                    apiColor[2]
-                )
-
-        # searching for 
-        for paletteColor in vibrantPalette:
-            if _logging: rgb(f"\nAnalysing colors according to palette color: {paletteColor}", paletteColor[0], paletteColor[1], paletteColor[2])
-            
-            bestResult = {"similarity": -1.0, "color": (-1, -1, -1)}
-            for apiColor in apiColors.values():
-                similarity = utils.getColorsSimilarity(paletteColor, apiColor)
-                print(f"analysing {apiColor}: {similarity}")
-                
-                if similarity > bestResult["similarity"]:
-                    bestResult = {"similarity": similarity, "color": tuple(apiColor)}
-            
-            bestColor = bestResult["color"]
-            
-            # check if suited api color is grayscale
-            if utils.isColorGrayscale(bestColor):
-                print("Color is grayscale")
-                continue
-            else:
-                return bestColor
+        # return most dominant color
+        return vibrantPalette[0]

@@ -48,9 +48,26 @@ pip install -r requirements.txt
 ```
 
 <h3>Starting</h3>
-
-Just run main.py :)
+Make sure to configure the following three environment variables:
+    SPOTIFY_CLIENT_ID
+    SPOTIFY_CLIENT_SECRET
+    SPOTIFY_REDIRECT_URI
+For further details, see [official Spotify documentation](https://developer.spotify.com/documentation/web-api/tutorials/client-credentials-flow)
 
 ```bash
 python3 main.py
 ```
+
+#### Attention
+The above command runs the program at the default state. It accepts command line arguments:
+
+```bash
+python3 main.py --local-only
+```
+Runs only color-extracting part (local-side). Great for your testing if you have (no doubt) a setup different from mine
+
+
+```bash
+python3 main.py --log
+```
+Enables advanced log messages. Useful for debugging and seeing how it works under the hood

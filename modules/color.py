@@ -1,6 +1,5 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import requests
 
 from colorist import rgb, hsl as hls
 from Pylette import extract_colors
@@ -37,11 +36,6 @@ class SpotifyColorExtractor:
 
     def getCurrentPlayback(self) -> Playback | None:
         """Get current playing track necessary information
-
-        Parameters
-        ----------
-        _logging : bool
-            Whether to print advanced debug messages (default: False)
 
         Returns
         -------

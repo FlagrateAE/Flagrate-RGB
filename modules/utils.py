@@ -1,6 +1,5 @@
-from colorist import rgb, hsl as hls
+from colorist import hsl as hls
 from chromato import convert
-from Pylette import Palette
 
 
 class Playback:
@@ -38,9 +37,9 @@ def isColorGrayscale(
     color : tuple [int, int, int]
         RGB color values
     tolerance : int
-        Maximum allowed difference between color channels (default: 6. This is an experimentally chosen value)
+        Maximum allowed difference between color channels (default: 7. This is an experimentally chosen value)
     blackwhiteThreshold : int
-        When color is considered too dark or too bright thus reverting to grayscale (default: 35. This is an experimentally chosen value)
+        When color is considered too dark or too bright thus reverting to grayscale (default: 34. This is an experimentally chosen value)
 
     Returns
     -------
@@ -80,44 +79,6 @@ def RGB2HLS(color: tuple[int, int, int]) -> tuple[int, int, int]:
     saturation = clamp(int(result.s * 100), 0, 100)
 
     return hue, lightness, saturation
-
-
-def getImageGrayscalance(
-    palette: Palette,
-    tolerance: int = 6.5,
-    _logging: bool = False,
-) -> list[bool]:
-    """
-    Check if a image`s color palette is grayscale.
-
-    Parameters
-    ----------
-    palette : Palette
-        Pylette Palette object
-    tolerance : int
-        Maximum allowed difference between color channels (default: 6. This is experimentally chosen value)
-    _logging : bool
-        Whether to print advanced debug messages (default: False)
-
-    Returns
-    --------
-    list[bool] : list of statements for is each color grayscale
-    """
-
-    grayscalance = []
-
-    if _logging:
-        print("Palette extracted for grayscale detection:")
-
-    for color in palette.colors:
-        grayscalance.append(isColorGrayscale(color=color.rgb, tolerance=tolerance))
-
-        if _logging:
-            rgb(tuple(color.rgb), color.rgb[0], color.rgb[1], color.rgb[2])
-            print("Grayscale") if grayscalance[-1] == True else print("Not grayscale")
-
-    return grayscalance
-
 
 def getColorsSimilarity(
     color1: tuple[int, int, int], color2: tuple[int, int, int]

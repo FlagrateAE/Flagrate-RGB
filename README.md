@@ -37,12 +37,14 @@ Here you list all prerequisites necessary for running your project. For example:
 - [Arduino IDE 2 (optional)](https://www.arduino.cc/en/software)
 - Git + GitHub
 
-<h3>Cloning</h3>
+<h3>Installation</h3>
 
-First you need to clone this project
+Clone the repository and install the dependencies
 
 ```bash
 git clone https://github.com/FlagrateAE/Flagrate-RGB
+cd Flagrate-RGB
+pip install -r requirements.txt
 ```
 
 <h3>Starting</h3>
@@ -50,6 +52,5 @@ git clone https://github.com/FlagrateAE/Flagrate-RGB
 Just run main.py :)
 
 ```bash
-cd Flagrate-RGB
 python3 main.py
 ```

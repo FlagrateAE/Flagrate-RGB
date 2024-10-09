@@ -13,6 +13,13 @@
 - C++ (Arduino)
 - IR communication (NEC protocol)
 
+<h2>🎨 Features</h2>
+
+- Spotify playback monitoring
+- Color extraction from album cover image
+- Tray control interface
+- Local-only mode + advanced logging mode (see [Starting](#commands))
+
 <h2 id="started">🚀 Getting started</h2>
 
 This project consists of 2 parts: local-side (Python) and microcontroller-side (Arduino)
@@ -55,21 +62,24 @@ Make sure to configure the following three environment variables:
     SPOTIFY_CLIENT_SECRET
     
     SPOTIFY_REDIRECT_URI
-    
-For further details, see [official Spotify documentation](https://developer.spotify.com/documentation/web-api/tutorials/client-credentials-flow)
+
+For further details, see [official Spotify documentation](https://developer.spotify.com/documentation/web-api/tutorials/client-credentials-flow)<br><br>
 
 ```bash
 python3 main.py
 ```
 
-#### Attention
+<h4 id = "commands">Attention!</h4>
 The above command runs the program at the default state. It accepts command line arguments:
+
+<br>
 
 ```bash
 python3 main.py --local-only
 ```
 Runs only color-extracting part (local-side). Great for your testing if you have (no doubt) a setup different from mine
-
+<br>
+<br>
 
 
 ```bash

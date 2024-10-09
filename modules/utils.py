@@ -193,9 +193,7 @@ def getNearestColorCode(color: tuple[int, int, int], _logging: bool = False) -> 
         
     bestHue  = min(LED_COLOR_CODES.keys(), key=lambda x: abs(x - colorHLS[0]))
     
-    colorRGB = convert.hsl_to_rgb(bestHue/360, 1, 0.6)
+    colorRGB = convert.hsl_to_rgb(bestHue/360, 1, 0.5)
     color = colorRGB.r, colorRGB.g, colorRGB.b
 
     return LED_COLOR_CODES[bestHue], color
-
-print()

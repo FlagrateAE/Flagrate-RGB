@@ -15,6 +15,6 @@
  You should probably customize this part for your case.
 
 # Roadmap
-- [ ] **Some sort of caching** to reduce API requests and processing
-- [ ] **Correcting support** for cases when main color is extracted from incorrectly or you have another view of it
+- [ ] **Some sort of caching** to reduce processing time even further
+- [ ] **Correcting support** for cases when main color is extracted from image incorrectly or you have another view of it
 - [ ] **Realtime color change accrodingly to display** for videogames, films, etc.

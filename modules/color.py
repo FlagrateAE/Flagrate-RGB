@@ -33,7 +33,7 @@ class SpotifyColorExtractor:
             )
         )
 
-        print("Spotify connected")
+        print("Spotify connected\n")
 
     def getCurrentPlayback(self) -> Playback | None:
         """Get current playing track necessary information
@@ -99,10 +99,10 @@ class SpotifyColorExtractor:
             
             # check if each color is grayscale
             if utils.isColorGrayscale(paletteRGB):
-                print("Grayscale")
+                if _logging: print("Grayscale")
             else:
                 vibrantPalette.append(paletteRGB)
-                print("Not grayscale")
+                if _logging: print("Not grayscale")
         
         # proceed with HLS threshold analysis
         if not vibrantPalette:

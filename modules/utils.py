@@ -3,31 +3,29 @@ from chromato import convert
 
 
 class Playback:
-    def __init__(self, currentPlayback: dict) -> None:
+    def __init__(self, current_playback: dict) -> None:
         """
         Construct a Playback object from Spotify current playback
 
         Parameters
         ----------
-        currentPlayback : dict
+        current_playback : dict
             Spotify current playback recieved from spotipy.Spotify.current_playback()
         """
-        self.track: str = currentPlayback["item"]["name"]
-        self.artist: str = currentPlayback["item"]["artists"][0]["name"]
-
-        self.albumName: str = currentPlayback["item"]["album"]["name"]
+        self.track: str = current_playback["item"]["name"]
+        self.artist: str = current_playback["item"]["artists"][0]["name"]
+        self.album_name: str = current_playback["item"]["album"]["name"]
         # albumID for dealing with non-ASCII named albums
-        self.albumID: str = currentPlayback["item"]["album"]["id"]
-
-        self.imageURL: str = currentPlayback["item"]["album"]["images"][0]["url"]
+        self.album_id: str = current_playback["item"]["album"]["id"]
+        self.image_url: str = current_playback["item"]["album"]["images"][0]["url"]
 
 
 def clamp(val: int, minVal: int, maxVal: int) -> int:
     return max(min(val, maxVal), minVal)
 
 
-def isColorGrayscale(
-    color: tuple[int, int, int], tolerance: int = 7, blackwhiteThreshold: int = 34
+def is_color_grayscale(
+    color: tuple[int, int, int], tolerance: int = 7, black_white_threshold: int = 34
 ) -> bool:
     """
     Check if a color is in the black-white range (grayscale).
@@ -38,7 +36,7 @@ def isColorGrayscale(
         RGB color values
     tolerance : int
         Maximum allowed difference between color channels (default: 7. This is an experimentally chosen value)
-    blackwhiteThreshold : int
+    black_white_threshold : int
         When color is considered too dark or too bright thus reverting to grayscale (default: 34. This is an experimentally chosen value)
 
     Returns
@@ -52,14 +50,14 @@ def isColorGrayscale(
     # Calculate the average of the RGB values
     avg = (r + g + b) / 3
 
-    if avg < blackwhiteThreshold or avg > (255 - blackwhiteThreshold):
+    if avg < black_white_threshold or avg > (255 - black_white_threshold):
         return True
 
     # Check if all color values are within the tolerance range of the average
     return all(abs(color - avg) <= tolerance for color in (r, g, b))
 
 
-def RGB2HLS(color: tuple[int, int, int]) -> tuple[int, int, int]:
+def rgb2hls(color: tuple[int, int, int]) -> tuple[int, int, int]:
     """
     Convert RGB color to HSL color.
 
@@ -80,7 +78,7 @@ def RGB2HLS(color: tuple[int, int, int]) -> tuple[int, int, int]:
 
     return hue, lightness, saturation
 
-def getColorsSimilarity(
+def get_colors_similarity(
     color1: tuple[int, int, int], color2: tuple[int, int, int]
 ) -> float:
     """
@@ -98,18 +96,18 @@ def getColorsSimilarity(
     float : similarity between two colors in normalized range [0, 1]
     """
 
-    maxPoints = 255 * 3
+    max_points = 255 * 3
     diff = (
         abs(color1[0] - color2[0])
         + abs(color1[1] - color2[1])
         + abs(color1[2] - color2[2])
     )
-    similarity = (maxPoints - diff) / maxPoints
+    similarity = (max_points - diff) / max_points
 
     return similarity
 
 
-def getNearestColorCode(color: tuple[int, int, int], _logging: bool = False) -> tuple:
+def get_nearest_color_code(color: tuple[int, int, int], _logging: bool = False) -> tuple:
     """
     Get nearest color code from colors available in RGB LED.
 
@@ -147,14 +145,14 @@ def getNearestColorCode(color: tuple[int, int, int], _logging: bool = False) -> 
         360: 4
     } # hue: code
     
-    colorHLS = RGB2HLS(color)
+    color_hls = rgb2hls(color)
     
     if _logging:
-        hls(f"Converted to HLS: {colorHLS}", colorHLS[0], colorHLS[1], colorHLS[2])
+        hls(f"Converted to HLS: {color_hls}", color_hls[0], color_hls[1], color_hls[2])
         
-    bestHue  = min(LED_COLOR_CODES.keys(), key=lambda x: abs(x - colorHLS[0]))
+    best_hue  = min(LED_COLOR_CODES.keys(), key=lambda x: abs(x - color_hls[0]))
     
-    colorRGB = convert.hsl_to_rgb(bestHue/360, 1, 0.5)
-    color = colorRGB.r, colorRGB.g, colorRGB.b
+    color_rgb = convert.hsl_to_rgb(best_hue/360, 1, 0.5)
+    color = color_rgb.r, color_rgb.g, color_rgb.b
 
-    return LED_COLOR_CODES[bestHue], color
+    return LED_COLOR_CODES[best_hue], color

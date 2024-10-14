@@ -9,25 +9,25 @@ from modules.utils import Playback
 
 
 class SpotifyColorExtractor:
-    def __init__(self, clientID: str, clientSecret: str, redirectURI: str):
+    def __init__(self, client_id: str, client_secret: str, redirect_uri: str):
         """Connect to Spotify
 
         Parameters
         ----------
-        clientID : str
+        client_id : str
             Spotify client ID
-        clientSecret : str
+        client_secret : str
             Spotify client secret
-        redirectURI : str
+        redirect_uri : str
             Spotify redirect URI
 
         Those should be acquired from https://developer.spotify.com/dashboard
         """
         self.client = spotipy.Spotify(
             auth_manager=SpotifyOAuth(
-                client_id=clientID,
-                client_secret=clientSecret,
-                redirect_uri=redirectURI,
+                client_id=client_id,
+                client_secret=client_secret,
+                redirect_uri=redirect_uri,
                 scope="user-read-currently-playing user-read-playback-state",
             )
         )
@@ -76,7 +76,7 @@ class SpotifyColorExtractor:
         """
 
         if playback:
-            imageURL = playback.imageURL
+            imageURL = playback.image_url
         elif not imageURL:
             raise ValueError("No image URL provided")
         
@@ -92,7 +92,7 @@ class SpotifyColorExtractor:
             if _logging: rgb(f"{paletteRGB}", paletteRGB[0], paletteRGB[1], paletteRGB[2])
             
             # check if each color is grayscale
-            if utils.isColorGrayscale(paletteRGB):
+            if utils.is_color_grayscale(paletteRGB):
                 if _logging: print("Grayscale")
             else:
                 vibrantPalette.append(paletteRGB)
@@ -106,7 +106,7 @@ class SpotifyColorExtractor:
             if _logging: print("\nHLS threshold analysis:")
           
         for color in vibrantPalette.copy():
-            paletteHLS = utils.RGB2HLS(color)
+            paletteHLS = utils.rgb2hls(color)
             
             if paletteHLS[1] < 15 or paletteHLS[1] > 85: # too dark ot too bright
                 msg = "too dark or too bright"

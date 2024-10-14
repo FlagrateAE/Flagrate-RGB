@@ -13,21 +13,21 @@ class Tray(pystray.Icon):
         super().__init__(
             name="flagratergb",
             title="Flagrate RGB",
-            menu=self._menuGenerator(track=None, artist=None, album=None),
+            menu=self.menu_generator(track=None, artist=None, album=None),
             icon=Image.open("modules/drawable/icon.png"),
         )
-        self.fRunning = True
+        self.f_running = True
         self.run_detached()
 
-    def _fStop(self) -> None:
+    def f_stop(self) -> None:
         """
         Stop the entire program.
         """
 
-        self.fRunning = False
+        self.f_running = False
         self.stop()
 
-    def _menuGenerator(self, track: str, artist: str, album: str) -> pystray.Menu:
+    def menu_generator(self, track: str, artist: str, album: str) -> pystray.Menu:
         """
         Generate tray icon menu that pops up on RMB click accrodingly to current system state.
 
@@ -49,7 +49,7 @@ class Tray(pystray.Icon):
                     text="⏸️ No playback",
                     action=None,
                 ),
-                pystray.MenuItem(text="⛔ Stop", action=self._fStop),
+                pystray.MenuItem(text="⛔ Stop", action=self.f_stop),
             )
         else:
             return pystray.Menu(
@@ -61,10 +61,10 @@ class Tray(pystray.Icon):
                     text=f"📀 {album}",
                     action=None,
                 ),
-                pystray.MenuItem(text="⛔ Stop", action=self._fStop),
+                pystray.MenuItem(text="⛔ Stop", action=self.f_stop),
             )
 
-    def displayColor(self, color: tuple[int, int, int], spotifyIcon: bool = False):
+    def display_color(self, color: tuple[int, int, int], show_spotify_icon: bool = False):
         """
         Set tray icon color.
 
@@ -72,11 +72,11 @@ class Tray(pystray.Icon):
         ----------
         color : tuple[int, int, int]
             RGB color values: (r, g, b)
-        spotifyIcon : bool
+        show_spotify_icon : bool
             Whether to draw Spotify icon (default: False)
         """
-        newIcon = Image.new("RGBA", (42, 42))
-        draw = ImageDraw.Draw(newIcon)
+        new_icon = Image.new("RGBA", (42, 42))
+        draw = ImageDraw.Draw(new_icon)
 
         # outer white
         draw.ellipse([(0, 0), (40, 40)], fill="white")
@@ -85,16 +85,16 @@ class Tray(pystray.Icon):
         # display desired color
         draw.ellipse([(4, 4), (36, 36)], fill=color)
 
-        if spotifyIcon:
-            newIcon = Image.alpha_composite(
-                im1=newIcon,
+        if show_spotify_icon:
+            new_icon = Image.alpha_composite(
+                im1=new_icon,
                 im2=Image.open("modules/drawable/spotify.png").resize((42, 42)),
             )
 
             # wait to load
             sleep(0.05)
 
-        self.icon = newIcon
+        self.icon = new_icon
 
     def spotify(self, playback: Playback, color: tuple[int, int, int]):
         """
@@ -108,7 +108,7 @@ class Tray(pystray.Icon):
             RGB color values: (r, g, b)
         """
 
-        self.menu = self._menuGenerator(
-            playback.track, playback.artist, playback.albumName
+        self.menu = self.menu_generator(
+            playback.track, playback.artist, playback.album_name
         )
-        self.displayColor(color=color, spotifyIcon=True)
+        self.display_color(color=color, show_spotify_icon=True)

@@ -12,6 +12,13 @@ class Color:
         RGB color values: (r, g, b)
     """
     
+    WHITE = (255, 255, 255)
+    MAX_RGB_SINGLE = 255
+    MAX_RGB_TOTAL = 255 * 3
+    MAX_HUE = 360
+    MAX_LIGHTNESS = 100
+    MAX_SATURATION = 100
+    
     def __init__(self, color: tuple[int, int, int]) -> None:
         self.r = color[0]
         self.g = color[1]
@@ -48,7 +55,7 @@ def is_color_grayscale(
     # Calculate the average of the RGB values
     avg = (r + g + b) / 3
 
-    if avg < black_white_threshold or avg > (255 - black_white_threshold):
+    if not black_white_threshold < avg < (Color.MAX_RGB_SINGLE - black_white_threshold):
         return True
 
     # Check if all color values are within the tolerance range of the average
@@ -70,9 +77,9 @@ def rgb2hls(color: tuple[int, int, int]) -> tuple[int, int, int]:
         HSL color values: Hue (0-360), Lightness (0-100), Saturation (0-100)
     """
     result = convert.rgb_to_hsl(color)
-    hue = int(result.h * 360)
-    lightness = int(result.l * 100)
-    saturation = int(result.s * 100)
+    hue = int(result.h * Color.MAX_HUE)
+    lightness = int(result.l * Color.MAX_LIGHTNESS)
+    saturation = int(result.s * Color.MAX_SATURATION)
 
     return hue, lightness, saturation
 
@@ -93,14 +100,13 @@ def get_colors_similarity(
     -------
     float : similarity between two colors in normalized range [0, 1]
     """
-
-    max_points = 255 * 3
+    
     diff = (
         abs(color1[0] - color2[0])
         + abs(color1[1] - color2[1])
         + abs(color1[2] - color2[2])
     )
-    similarity = (max_points - diff) / max_points
+    similarity = (Color.MAX_RGB_TOTAL - diff) / Color.MAX_RGB_TOTAL
 
     return similarity
 
@@ -146,7 +152,7 @@ def extract_main_color(image_url: str, _logging: bool = False) -> tuple[int, int
     # proceed with HLS threshold analysis
     if not vibrant_palette:
         if _logging: print("The image is grayscale")
-        return (255, 255, 255)
+        return Color.WHITE
     else:
         if _logging: print("\nHLS threshold analysis:")
         
@@ -165,7 +171,7 @@ def extract_main_color(image_url: str, _logging: bool = False) -> tuple[int, int
         if _logging: hls(f"{palette_hls} - {msg}", palette_hls[0], palette_hls[1], palette_hls[2])
     
     if not vibrant_palette:
-        return (255, 255, 255)
+        return Color.WHITE
         
     if _logging:
         print("\nFinal colors:")

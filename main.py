@@ -1,7 +1,7 @@
 from modules.tray import Tray
 from modules.arduino import Arduino, get_nearest_color_code
 from modules.spotify import SpotifyRequestHandler
-from modules.color import extract_main_color
+from modules.color import Color, extract_main_color
 
 import sys
 import os
@@ -68,8 +68,8 @@ def run(local_only = False, _logging = False):
                         main_color[2],
                     )
 
-                if main_color == (255, 255, 255):
-                    color_led = (255, 255, 255)
+                if main_color is Color.WHITE:
+                    color_led = main_color
                     command = 12
                 else:
                     # get my color code for RGB LED

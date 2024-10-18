@@ -50,7 +50,7 @@ def run(local_only = False, _logging = False):
             if current_album_id != last_album_id:
 
                 if _logging:
-                    print(yaml.dump(playback))
+                    print(yaml.dump(playback, allow_unicode=True))
                 else:
                     print(
                         f'Now playing "{playback["artist"]} - {playback["track"]}" from album "{playback["album_name"]}"'

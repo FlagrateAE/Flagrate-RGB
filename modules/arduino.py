@@ -71,14 +71,14 @@ def get_nearest_color_code(color: tuple[int, int, int], _logging: bool = False) 
         252: 16,
         264: 17,
         274: 18,
-        285: 19,
-        360: 4
+        310: 19,
+        361: 4
     } # hue: code
     
     color_hls = rgb2hls(color)
     
     if _logging:
-        hls(f"Converted to HLS: {color_hls}", color_hls[0], color_hls[1]/50, color_hls[2]/50)
+        hls(f"Converted to HLS: {color_hls}\n", color_hls[0], color_hls[1], color_hls[2])
         
     best_hue  = min(LED_COLOR_CODES.keys(), key=lambda x: abs(x - color_hls[0]))
     

@@ -1,8 +1,7 @@
 from modules.tray import Tray
-from modules.arduino import Arduino
+from modules.arduino import Arduino, get_nearest_color_code
 from modules.spotify import SpotifyRequestHandler
 from modules.color import extract_main_color
-from modules.utils import get_nearest_color_code
 
 import sys
 import os
@@ -23,6 +22,7 @@ def run(local_only = False, _logging = False):
     """
     
     SPOTIFY_REQUEST_DELAY = 3
+    
     
     if local_only:
         print("Starting in local-only mode")
@@ -57,27 +57,27 @@ def run(local_only = False, _logging = False):
                     )
 
                 # get main color
-                mainColor = extract_main_color(playback["image_url"], _logging)
+                main_color = extract_main_color(playback["image_url"], _logging)
                 last_album_id = current_album_id
 
                 if _logging:
                     rgb(
-                        f"\nBest color from image: {mainColor}",
-                        mainColor[0],
-                        mainColor[1],
-                        mainColor[2],
+                        f"\nBest color from image: {main_color}",
+                        main_color[0],
+                        main_color[1],
+                        main_color[2],
                     )
 
-                if mainColor == (255, 255, 255):
+                if main_color == (255, 255, 255):
                     color_led = (255, 255, 255)
                     command = 12
                 else:
                     # get my color code for RGB LED
-                    command, color_led = get_nearest_color_code(mainColor, _logging)
+                    command, color_led = get_nearest_color_code(main_color, _logging)
 
                 # display color in console and tray
                 rgb(f"MAIN COLOR: {color_led}\n", color_led[0], color_led[1], color_led[2])
-                tray.spotify(playback=playback, color=color_led)
+                tray.spotify(playback, color_led)
                 
                 if not local_only:
                     # execute color command transmittion

@@ -1,6 +1,7 @@
 from modules.tray import Tray
 from modules.arduino import Arduino
-from modules.color import SpotifyColorExtractor, Playback
+from modules.spotify import SpotifyRequestHandler
+from modules.color import extract_main_color
 from modules.utils import get_nearest_color_code
 
 import sys
@@ -9,7 +10,7 @@ import time
 from colorist import rgb
 import yaml
 
-def RUN(local_only = False, _logging = False):
+def run(local_only = False, _logging = False):
     """Main function
 
     Parameters
@@ -21,6 +22,8 @@ def RUN(local_only = False, _logging = False):
         Whether to print advanced debug messages (default: False)
     """
     
+    SPOTIFY_REQUEST_DELAY = 3
+    
     if local_only:
         print("Starting in local-only mode")
     else:
@@ -29,32 +32,32 @@ def RUN(local_only = False, _logging = False):
         print("Advanced logging enabled")
         
     # initialize everything
-    sp = SpotifyColorExtractor(
-        client_id=os.getenv("SPOTIFY_CLIENT_ID"),
-        client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
-        redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
+    sp = SpotifyRequestHandler(
+        os.environ["SPOTIFY_CLIENT_ID"],
+        os.environ["SPOTIFY_CLIENT_SECRET"],
+        os.environ["SPOTIFY_REDIRECT_URI"]
     )
     tray = Tray()
 
     last_album_id = True
     while tray.f_running:
         # get current playing track from Spotify
-        playback: Playback = sp.getCurrentPlayback()
+        playback: dict = sp.get_current_playback()
 
         if playback:
             # check if album has changed
-            current_album_id = playback.album_id
+            current_album_id = playback["album_id"]
             if current_album_id != last_album_id:
 
                 if _logging:
-                    print(yaml.dump(playback.__dict__))
+                    print(yaml.dump(playback))
                 else:
                     print(
-                        f'Now playing "{playback.artist} - {playback.track}" from album "{playback.album_name}"'
+                        f'Now playing "{playback["artist"]} - {playback["track"]}" from album "{playback["album_name"]}"'
                     )
 
                 # get main color
-                mainColor = sp.extractMainColor(playback=playback, _logging=_logging)
+                mainColor = extract_main_color(playback["image_url"], _logging)
                 last_album_id = current_album_id
 
                 if _logging:
@@ -66,15 +69,15 @@ def RUN(local_only = False, _logging = False):
                     )
 
                 if mainColor == (255, 255, 255):
-                    LEDColor = (255, 255, 255)
+                    color_led = (255, 255, 255)
                     command = 12
                 else:
                     # get my color code for RGB LED
-                    command, LEDColor = get_nearest_color_code(mainColor, _logging)
+                    command, color_led = get_nearest_color_code(mainColor, _logging)
 
                 # display color in console and tray
-                rgb(f"MAIN COLOR: {LEDColor}\n", LEDColor[0], LEDColor[1], LEDColor[2])
-                tray.spotify(playback=playback, color=LEDColor)
+                rgb(f"MAIN COLOR: {color_led}\n", color_led[0], color_led[1], color_led[2])
+                tray.spotify(playback=playback, color=color_led)
                 
                 if not local_only:
                     # execute color command transmittion
@@ -85,12 +88,12 @@ def RUN(local_only = False, _logging = False):
                 print("No playback detected")
                 last_album_id = None
 
-        time.sleep(2)
+        time.sleep(SPOTIFY_REQUEST_DELAY)
 
 
 if __name__ == "__main__":
     # parse arguments
-    localOnly = True if "--local-only" in sys.argv else False
+    local_only = True if "--local-only" in sys.argv else False
     _logging = True if "--log" in sys.argv else False
     
-    RUN(localOnly, _logging)
+    run(local_only, _logging)

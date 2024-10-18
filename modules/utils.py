@@ -1,23 +1,23 @@
 from colorist import hsl as hls
 from chromato import convert
 
+class Color:
+    """
+    Color class
+    
+    Parameters
+    ----------
+    color : tuple[int, int, int]
+        RGB color values: (r, g, b)
+    """
+    
+    def __init__(self, color: tuple[int, int, int]) -> None:
+        self.r = color[0]
+        self.g = color[1]
+        self.b = color[2]
 
-class Playback:
-    def __init__(self, current_playback: dict) -> None:
-        """
-        Construct a Playback object from Spotify current playback
-
-        Parameters
-        ----------
-        current_playback : dict
-            Spotify current playback recieved from spotipy.Spotify.current_playback()
-        """
-        self.track: str = current_playback["item"]["name"]
-        self.artist: str = current_playback["item"]["artists"][0]["name"]
-        self.album_name: str = current_playback["item"]["album"]["name"]
-        # albumID for dealing with non-ASCII named albums
-        self.album_id: str = current_playback["item"]["album"]["id"]
-        self.image_url: str = current_playback["item"]["album"]["images"][0]["url"]
+    def hls(self) -> tuple[int, int, int]:
+        pass
 
 
 def clamp(val: int, minVal: int, maxVal: int) -> int:
@@ -25,7 +25,7 @@ def clamp(val: int, minVal: int, maxVal: int) -> int:
 
 
 def is_color_grayscale(
-    color: tuple[int, int, int], tolerance: int = 7, black_white_threshold: int = 34
+    color: Color | tuple[int, int, int], tolerance: int = 7, black_white_threshold: int = 34
 ) -> bool:
     """
     Check if a color is in the black-white range (grayscale).
@@ -43,9 +43,14 @@ def is_color_grayscale(
     -------
     bool : True if the color is grayscale, False otherwise
     """
-    r = color[0]
-    g = color[1]
-    b = color[2]
+    if isinstance(color, tuple):
+        r = color[0]
+        g = color[1]
+        b = color[2]
+    else:
+        r = color.r
+        g = color.g
+        b = color.b
 
     # Calculate the average of the RGB values
     avg = (r + g + b) / 3
@@ -124,7 +129,7 @@ def get_nearest_color_code(color: tuple[int, int, int], _logging: bool = False) 
 
     Returns
     -------
-    tuple[int, tuple[int, int, int]] : Color code in my case and RGB values (0-255) of best mathcing color
+    int, tuple[int, int, int] : Color code in my case and RGB values (0-255) of best mathcing color
     """
     LED_COLOR_CODES = {
         0: 4,

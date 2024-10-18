@@ -1,7 +1,6 @@
 import pystray
 from PIL import Image, ImageDraw
 from time import sleep
-from modules.utils import Playback
 
 
 class Tray(pystray.Icon):
@@ -13,7 +12,7 @@ class Tray(pystray.Icon):
         super().__init__(
             name="flagratergb",
             title="Flagrate RGB",
-            menu=self.menu_generator(track=None, artist=None, album=None),
+            menu=self.menu_generator(None),
             icon=Image.open("modules/drawable/icon.png"),
         )
         self.f_running = True
@@ -27,23 +26,17 @@ class Tray(pystray.Icon):
         self.f_running = False
         self.stop()
 
-    def menu_generator(self, track: str, artist: str, album: str) -> pystray.Menu:
+    def menu_generator(self, playback: dict | None) -> pystray.Menu:
         """
         Generate tray icon menu that pops up on RMB click accrodingly to current system state.
 
         Parameters
         ----------
-        track : str
-            Current track name
-        artist : str
-            Current artist name
-        album : str
-            Current album name
-
-        If no music is playing, pass any of these as None.
+        playback : dict or None
+            Current Spotify playback (see SpotifyRequestHandler.get_current_playback()) or None if no track is playing
         """
 
-        if not track or not artist or not album:
+        if not playback:
             return pystray.Menu(
                 pystray.MenuItem(
                     text="⏸️ No playback",
@@ -54,11 +47,11 @@ class Tray(pystray.Icon):
         else:
             return pystray.Menu(
                 pystray.MenuItem(
-                    text=f"🎧 {artist} - {track}",
+                    text=f'🎧 {playback["artist"]} - {playback["track"]}',
                     action=None,
                 ),
                 pystray.MenuItem(
-                    text=f"📀 {album}",
+                    text=f'📀 {playback["album_name"]}',
                     action=None,
                 ),
                 pystray.MenuItem(text="⛔ Stop", action=self.f_stop),
@@ -75,6 +68,9 @@ class Tray(pystray.Icon):
         show_spotify_icon : bool
             Whether to draw Spotify icon (default: False)
         """
+        
+        ICON_LOAD_DELAY = 0.05
+        
         new_icon = Image.new("RGBA", (42, 42))
         draw = ImageDraw.Draw(new_icon)
 
@@ -92,23 +88,21 @@ class Tray(pystray.Icon):
             )
 
             # wait to load
-            sleep(0.05)
+            sleep(ICON_LOAD_DELAY)
 
         self.icon = new_icon
 
-    def spotify(self, playback: Playback, color: tuple[int, int, int]):
+    def spotify(self, playback: dict, color: tuple[int, int, int]):
         """
         Set playing track info to be displayed in tray icon menu.
 
         Parameters
         ----------
-        playback : Playback
-            Current Spotify playback (class in utils.py)
+        playback : dict
+            Current Spotify playback (see SpotifyRequestHandler.get_current_playback())
         color : tuple[int, int, int]
             RGB color values: (r, g, b)
         """
 
-        self.menu = self.menu_generator(
-            playback.track, playback.artist, playback.album_name
-        )
+        self.menu = self.menu_generator(playback)
         self.display_color(color=color, show_spotify_icon=True)

@@ -86,3 +86,12 @@ Runs only color-extracting part (local-side). Great for your testing if you have
 python3 main.py --log
 ```
 Enables advanced log messages. Useful for debugging and seeing how it works under the hood
+
+<h3>TODO</h3>
+- Automatic shutdown if Arduino is disconnected
+<br>
+- Caching
+<br>
+- Color correction support
+<br>
+- Better black-white filtration system based on Lightness-Saturation difference

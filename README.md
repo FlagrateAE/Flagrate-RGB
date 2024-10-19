@@ -95,3 +95,5 @@ Enables advanced log messages. Useful for debugging and seeing how it works unde
 - Color correction support
 <br>
 - Better black-white filtration system based on Lightness-Saturation difference
+<br>
+- Change API communication to long polling

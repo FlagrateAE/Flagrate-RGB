@@ -2,14 +2,20 @@ from colorist import rgb, hsl as hls
 from Pylette import extract_colors
 from chromato import convert
 
+
+
 class Color:
     """
     Color class
     
     Parameters
     ----------
-    color : tuple[int, int, int]
-        RGB color values: (r, g, b)
+    r : int
+        Red color value (0-255)
+    g : int
+        Green color value (0-255)
+    b : int
+        Blue color value (0-255)
     """
     
     WHITE = (255, 255, 255)
@@ -19,82 +25,184 @@ class Color:
     MAX_LIGHTNESS = 100
     MAX_SATURATION = 100
     
-    def __init__(self, color: tuple[int, int, int]) -> None:
-        self.r = color[0]
-        self.g = color[1]
-        self.b = color[2]
+    def __init__(self, r: int, g: int, b: int) -> None:
+        self._r = r
+        self._g = g
+        self._b = b
+        
+        self._h = None
+        self._l = None
+        self._s = None
+    
+    @property
+    def r(self) -> int:
+        """
+        Red RGB color value (0-255)
+        """
+        return self._r
+    
+    @property
+    def g(self) -> int:
+        """Green RGB color value (0-255)"""
+        return self._g
+    
+    @property
+    def b(self) -> int:
+        """Blue RGB color value (0-255)"""
+        return self._b
+        
+    @property
+    def rgb(self) -> tuple[int, int, int]:
+        """Tuple of RGB color values"""
+        return (self._r, self._g, self._b)
+    
+    def _rgb2hls(self):
+        """Convert self to HLS color space and write the results to properties"""
+        
+        hsl_space = convert.rgb_to_hsl(self.rgb)
+        
+        self._h = int(hsl_space.h * Color.MAX_HUE)
+        self._l = int(hsl_space.l * Color.MAX_LIGHTNESS)
+        self._s = int(hsl_space.s * Color.MAX_SATURATION)
+        
+    @property
+    def h(self) -> int:
+        """HLS hue value (0-360)"""
+        
+        if not self._h:
+            self._rgb2hls()
+        
+        return self._h
+    
+    @property
+    def l(self) -> int:
+        """HLS lightness value (0-100)"""
+        
+        if not self._l:
+            self._rgb2hls()
+        
+        return self._l
+    
+    @property
+    def s(self) -> int:
+        """HLS saturation value (0-100)"""
+        
+        if not self._s:
+            self._rgb2hls()
+        
+        return self._s
 
+    @property
+    def hls(self) -> tuple[int, int, int]:
+        """Tuple of HLS color values"""
+        
+        if not self._h:
+            self._rgb2hls()
+        
+        return (self._h, self._l, self._s)
+    
+    @property
+    def is_grayscale(self) -> bool:
+        """Check if the color is on grayscale range"""
+        
+        TOLERANCE = 7
+        BLACK_WHITE_THRESHOLD = 34
+        
+        avg = (self._r + self._g + self._b) / 3
+        
+        # not in colorful range
+        if not BLACK_WHITE_THRESHOLD < avg < (Color.MAX_RGB_SINGLE - BLACK_WHITE_THRESHOLD):
+            return True
+        
+        # check if all color values are within the tolerance range of the average
+        return all(abs(avg - channel) <= TOLERANCE for channel in self.rgb)
+    
+        # stub for hls check
+        # palette_hls = rgb2hls(color) 
+        # if palette_hls[1] < 15 or palette_hls[1] > 85: # too dark ot too bright
+        #     msg = "too dark or too bright"
+        #     vibrant_palette.remove(color)
+        # elif palette_hls[2] < 20: # too unvibrant
+        #     msg = "too unvibrant"
+        #     vibrant_palette.remove(color)
+        # else:
+        #     msg = "appropriate"
+            
+        # if _logging: hls(f"{palette_hls} - {msg}", palette_hls[0], palette_hls[1], palette_hls[2])  
+        
+    def led_code(self, _logging: bool = False) -> tuple:
+        """
+        Get nearest color code from colors available in RGB LED.
 
-def is_color_grayscale(
-    color: Color | tuple[int, int, int], tolerance: int = 7, black_white_threshold: int = 34) -> bool:
+        Note
+        ----
+        This is highly narrow solution. You would probably need to do it yourself accordinly to your RGB light source. In my case, it is an RGB LED strip with 16 colors available (5 R, G, and B tones each + white).
+
+        Parameters
+        ---------
+        _logging : bool
+            Whether to print advanced debug messages (default: False)
+
+        Returns
+        -------
+        int, Color : color code in my case and the color itself
+        """
+        LED_COLOR_CODES = {
+            0: 4,
+            41: 5,
+            80: 6,
+            90: 7,
+            100: 8,
+            120: 9,
+            167: 10,
+            177: 11,
+            199: 13,
+            205: 14,
+            240: 15,
+            252: 16,
+            264: 17,
+            274: 18,
+            311: 19,
+            360: 4
+        } # hue: code
+        
+        if _logging:
+            colorful_output(f"Converted to HLS: {self.hls}", color=self, hls_mode=True) # type: ignore
+            
+        best_hue  = min(LED_COLOR_CODES.keys(), key=lambda led_hue: abs(led_hue - self.h))
+        
+        led_color = convert.hsl_to_rgb(best_hue / Color.MAX_HUE, 1, 0.5)
+        led_color = Color(led_color.r, led_color.g, led_color.b)
+
+        return LED_COLOR_CODES[best_hue], led_color
+
+def colorful_output(text: str, color: Color, hls_mode: bool = False):
     """
-    Check if a color is in the black-white range (grayscale).
-
+    Print colored text to the console using `colorist`
+    
     Parameters
     ----------
-    color : tuple [int, int, int]
-        RGB color values
-    tolerance : int
-        Maximum allowed difference between color channels (default: 7. This is an experimentally chosen value)
-    black_white_threshold : int
-        When color is considered too dark or too bright thus reverting to grayscale (default: 34. This is an experimentally chosen value)
-
-    Returns
-    -------
-    bool : True if the color is grayscale, False otherwise
+    text : str
+        Text to be printed
+    color : Color
+        Color to be used
+    hls_mode : bool
+        Whether to use `hls` function (default: False)
     """
-    if isinstance(color, tuple):
-        r = color[0]
-        g = color[1]
-        b = color[2]
+    
+    if hls_mode:
+        hls(text, color.h, color.l, color.s)
     else:
-        r = color.r
-        g = color.g
-        b = color.b
+        rgb(text, color.r, color.g, color.b)
 
-    # Calculate the average of the RGB values
-    avg = (r + g + b) / 3
-
-    if not black_white_threshold < avg < (Color.MAX_RGB_SINGLE - black_white_threshold):
-        return True
-
-    # Check if all color values are within the tolerance range of the average
-    return all(abs(color - avg) <= tolerance for color in (r, g, b))
-
-
-def rgb2hls(color: tuple[int, int, int]) -> tuple[int, int, int]:
-    """
-    Convert RGB color to HSL color.
-
-    Parameters
-    ----------
-    color : tuple[int, int, int]
-        RGB color values: R (0-255), G (0-255), B (0-255)
-
-    Returns
-    -------
-    tuple[int, int, int]
-        HSL color values: Hue (0-360), Lightness (0-100), Saturation (0-100)
-    """
-    result = convert.rgb_to_hsl(color)
-    hue = int(result.h * Color.MAX_HUE)
-    lightness = int(result.l * Color.MAX_LIGHTNESS)
-    saturation = int(result.s * Color.MAX_SATURATION)
-
-    return hue, lightness, saturation
-
-def get_colors_similarity(
-    color1: tuple[int, int, int], color2: tuple[int, int, int]
-) -> float:
+def get_colors_similarity(color1: Color, color2: Color) -> float:
     """
     Get similarity between two colors.
 
     Parameters
     ----------
-    color1 : tuple[int, int, int]
-        First RGB color values
-    color2 : tuple[int, int, int]
-        Second RGB color values
+    color1 : Color
+    color2 : Color
 
     Returns
     -------
@@ -102,21 +210,21 @@ def get_colors_similarity(
     """
     
     diff = (
-        abs(color1[0] - color2[0])
-        + abs(color1[1] - color2[1])
-        + abs(color1[2] - color2[2])
+        abs(color1.r - color2.r)
+        + abs(color1.g - color2.g)
+        + abs(color1.b - color2.b)
     )
     similarity = (Color.MAX_RGB_TOTAL - diff) / Color.MAX_RGB_TOTAL
 
     return similarity
 
-def extract_main_color(image_url: str, _logging: bool = False) -> tuple[int, int, int]:
+def extract_main_color(image_url: str, _logging: bool = False) -> Color:
     """
     Extract most vibrant color from Spotify album cover image
 
     Parameters
     ----------
-    input : str
+    image_url : str
         URL of image to extract the main color from 
 
     _logging : bool
@@ -124,7 +232,7 @@ def extract_main_color(image_url: str, _logging: bool = False) -> tuple[int, int
 
     Returns
     -------
-    tuple : (R, G, B)
+    Color : main color extracted from image
 
     Note
     ----
@@ -139,44 +247,26 @@ def extract_main_color(image_url: str, _logging: bool = False) -> tuple[int, int
     if _logging: print("Colors extracted for grayscale check (RGB):")
     
     for palette_color in palette:
-        palette_rgb = tuple(palette_color.rgb)
-        if _logging: rgb(f"{palette_rgb}", palette_rgb[0], palette_rgb[1], palette_rgb[2])
+        palette_color = Color(*palette_color.rgb)
+        
+        if _logging: colorful_output(f"{palette_color.rgb}", palette_color)
         
         # check if each color is grayscale
-        if is_color_grayscale(palette_rgb):
+        if palette_color.is_grayscale:
             if _logging: print("Grayscale")
         else:
-            vibrant_palette.append(palette_rgb)
+            vibrant_palette.append(palette_color)
             if _logging: print("Not grayscale")
     
-    # proceed with HLS threshold analysis
+    # if the list is empty, the image is grayscale
     if not vibrant_palette:
         if _logging: print("The image is grayscale")
-        return Color.WHITE
-    else:
-        if _logging: print("\nHLS threshold analysis:")
-        
-    for color in vibrant_palette.copy():
-        palette_hls = rgb2hls(color)
-        
-        if palette_hls[1] < 15 or palette_hls[1] > 85: # too dark ot too bright
-            msg = "too dark or too bright"
-            vibrant_palette.remove(color)
-        elif palette_hls[2] < 20: # too unvibrant
-            msg = "too unvibrant"
-            vibrant_palette.remove(color)
-        else:
-            msg = "appropriate"
-            
-        if _logging: hls(f"{palette_hls} - {msg}", palette_hls[0], palette_hls[1], palette_hls[2])
-    
-    if not vibrant_palette:
         return Color.WHITE
         
     if _logging:
         print("\nFinal colors:")
         for color in vibrant_palette:
-            rgb(f"{color}", color[0], color[1], color[2])
+            colorful_output(f"{color.rgb}", color)
 
     # return most dominant color
     return vibrant_palette[0]

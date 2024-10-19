@@ -2,6 +2,8 @@ import pystray
 from PIL import Image, ImageDraw
 from time import sleep
 
+from modules.color import Color
+
 
 class Tray(pystray.Icon):
     def __init__(self) -> None:
@@ -57,14 +59,14 @@ class Tray(pystray.Icon):
                 pystray.MenuItem(text="⛔ Stop", action=self.f_stop),
             )
 
-    def display_color(self, color: tuple[int, int, int], show_spotify_icon: bool = False):
+    def display_color(self, color: Color, show_spotify_icon: bool = False) -> None:
         """
         Set tray icon color.
 
         Parameters
         ----------
-        color : tuple[int, int, int]
-            RGB color values: (r, g, b)
+        color : Color
+            Color to display in tray
         show_spotify_icon : bool
             Whether to draw Spotify icon (default: False)
         """
@@ -79,7 +81,7 @@ class Tray(pystray.Icon):
         # inner black
         draw.ellipse([(2, 2), (38, 38)], fill="black")
         # display desired color
-        draw.ellipse([(4, 4), (36, 36)], fill=color)
+        draw.ellipse([(4, 4), (36, 36)], fill=color.rgb)
 
         if show_spotify_icon:
             new_icon = Image.alpha_composite(
@@ -92,7 +94,7 @@ class Tray(pystray.Icon):
 
         self.icon = new_icon
 
-    def spotify(self, playback: dict, color: tuple[int, int, int]):
+    def display_spotify(self, playback: dict, color: Color) -> None:
         """
         Set playing track info to be displayed in tray icon menu.
 
@@ -100,9 +102,10 @@ class Tray(pystray.Icon):
         ----------
         playback : dict
             Current Spotify playback (see SpotifyRequestHandler.get_current_playback())
-        color : tuple[int, int, int]
-            RGB color values: (r, g, b)
+        color : Color
+            Color to display in tray
         """
 
         self.menu = self.menu_generator(playback)
-        self.display_color(color=color, show_spotify_icon=True)
+        self.display_color(color, show_spotify_icon=True)
+

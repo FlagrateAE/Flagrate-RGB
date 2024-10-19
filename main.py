@@ -61,7 +61,8 @@ def run(local_only = False, _logging = False):
 
                 if _logging: colorful_output(f"\nBest color from image: {main_color.rgb}", main_color)
 
-                if main_color is Color.WHITE:
+                # get command and color for RGB LED
+                if main_color.rgb == Color.WHITE:
                     color_led = main_color
                     command = 12
                 else:

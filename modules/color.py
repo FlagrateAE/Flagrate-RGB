@@ -105,7 +105,7 @@ class Color:
     def is_grayscale(self) -> bool:
         """Check if the color is on grayscale range"""
         
-        TOLERANCE = 7
+        TOLERANCE = 8
         BLACK_WHITE_THRESHOLD = 34
         
         avg = (self._r + self._g + self._b) / 3
@@ -261,7 +261,7 @@ def extract_main_color(image_url: str, _logging: bool = False) -> Color:
     # if the list is empty, the image is grayscale
     if not vibrant_palette:
         if _logging: print("The image is grayscale")
-        return Color.WHITE
+        return Color(*Color.WHITE)
         
     if _logging:
         print("\nFinal colors:")
